@@ -1,7 +1,6 @@
-# TODO push to github once per day
-# TODO fix 50 line function
 # TODO add error bars (create_zoo, ggplot)
 setwd("C:/Users/Preet/OneDrive - Ursinus College/paid_labor/Summer Fellows 2024")
+rm(list = ls())
 
 # function to ensure required packages are installed
 check_library <- function(packages) {
@@ -116,7 +115,8 @@ population <- stratified_population2 %>%
       filter(region %in% c("Nicaragua", "Honduras")), .
   ) %>%
   clean_names() %>%
-  rename(location = region) # population now has age-standardized and all ages rows
+  rename(location = region) %>% # population now has age-standardized and all ages rows
+  mutate(population = round(population))
 
 # formatting for rain data
 nicaragua_rain_yr <- nicaragua_rain_cm %>%
@@ -517,7 +517,6 @@ aggregate_rows <- function(df, age_values) {
   return(new_rows)
 }
 
-# FIXME idfk anymore
 generate_plot2 <- function(df,
                            genders,
                            title,
@@ -546,7 +545,9 @@ generate_plot2 <- function(df,
 
       # Check if long_data is NULL or empty
       if (is.null(long_data) || nrow(long_data) == 0) {
-        message(paste("No data returned for gender:", gender, "and age group:", plot_age))
+        message(paste("No data returned for gender:",
+                      gender,
+                      "and age group:", plot_age))
         return(NULL)
       }
 
@@ -555,10 +556,14 @@ generate_plot2 <- function(df,
       print(head(long_data))
 
       long_data %>%
-        separate(series, into = c("country", "disease"), sep = "_", extra = "merge", fill = "right") %>%
+        separate(series,
+                 into = c("country", "disease"),
+                 sep = "_",
+                 extra = "merge",
+                 fill = "right") %>%
         mutate(
           country = case_when(
-            grepl("nicaragua", country) ~ "Nicaragua", # fixed grepl column, was doing grepl for series col which was split in prev. lines
+            grepl("nicaragua", country) ~ "Nicaragua",
             grepl("honduras", country) ~ "Honduras"
           ),
           disease = case_when(
@@ -569,9 +574,9 @@ generate_plot2 <- function(df,
           age = plot_age
         )
     }) %>%
-    bind_rows()
+      bind_rows()
   }) %>%
-  bind_rows()
+    bind_rows()
 
   # Check if long_data2 is NULL or empty
   if (is.null(long_data2) || nrow(long_data2) == 0) {
@@ -587,7 +592,9 @@ generate_plot2 <- function(df,
   ggplot(long_data2, aes(x = time, color = age)) +
     geom_line(aes(y = actual, linetype = "Actual")) +
     geom_line(aes(y = predicted, linetype = "Predicted")) +
-    geom_vline(xintercept = intervention_date, linetype = "dashed", color = "#000000") +
+    geom_vline(xintercept = intervention_date,
+               linetype = "dashed",
+               color = "#000000") +
     scale_x_date(date_breaks = "2 year", date_labels = "%Y") +
     labs(
       title = title,
@@ -685,6 +692,7 @@ generate_more_ages_plot <- function(df,
   return(plot)
 }
 
+# test
 test <- generate_more_ages_plot(
   df = updated_df,
   genders = c("Female", "Male"),
