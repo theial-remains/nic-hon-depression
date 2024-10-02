@@ -558,12 +558,12 @@ generate_plot2 <- function(df,
         separate(series, into = c("country", "disease"), sep = "_", extra = "merge", fill = "right") %>%
         mutate(
           country = case_when(
-            grepl("nicaragua", series) ~ "Nicaragua",
-            grepl("honduras", series) ~ "Honduras"
+            grepl("nicaragua", country) ~ "Nicaragua", # fixed grepl column, was doing grepl for series col which was split in prev. lines
+            grepl("honduras", country) ~ "Honduras"
           ),
           disease = case_when(
-            grepl("anxiety", series) ~ "Anxiety",
-            grepl("depressive", series) ~ "Depression"
+            grepl("anxiety", disease) ~ "Anxiety",
+            grepl("depressive", disease) ~ "Depression"
           ),
           gender = gender,
           age = plot_age
@@ -612,7 +612,7 @@ generate_plot2 <- function(df,
 }
 
 # test
-test_plot2 <- generate_plot2(
+generate_plot2(
   df = updated_df,
   genders = c("Female", "Male"),
   title = "test",
@@ -624,11 +624,9 @@ test_plot2 <- generate_plot2(
   ),
   intervention_date = as.Date("2019-01-01"),
   line_colors = c(
-    "10-29" = "red",
     "All ages" = "#000000"
   ),
   plot_ages = list(
-    c("10-14", "15-19", "20-24", "25-29"),
     "All ages"
   ),
   measurename = "DALYs",
@@ -692,8 +690,10 @@ test <- generate_more_ages_plot(
   genders = c("Female", "Male"),
   title = "Test",
   yvars = c(
-    "nicaragua_anxiety_disorders",
-    "honduras_anxiety_disorders"
+    "nicaragua_per_capita_anxiety_disorders",
+    "honduras_per_capita_anxiety_disorders",
+    "nicaragua_per_capita_major_depressive_disorder",
+    "honduras_per_capita_major_depressive_disorder"
   ), # new columns
   plot_ages = list(
     c("10-14", "15-19", "20-24", "25-29"),
