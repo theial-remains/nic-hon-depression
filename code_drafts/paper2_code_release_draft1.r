@@ -1,4 +1,3 @@
-# TODO add error bars (create_zoo, ggplot)
 setwd("C:/Users/Preet/OneDrive - Ursinus College/paid_labor/Summer Fellows 2024")
 rm(list = ls())
 
@@ -332,13 +331,22 @@ create_zoo <- function(df1,
 
   original_series <- zoo_df[, yvar]
 
-  # graphing
+  # Perform causal impact analysis
   pre_period <- as.Date(c(pre_start, pre_end))
   post_period <- as.Date(c(post_start, post_end))
 
   impact <- CausalImpact(zoo_df, pre_period, post_period)
 
-  return(list(impact = impact, original = original_series))
+  # Extract lower and upper bounds from CausalImpact result
+  lower_bound <- impact$series$point.pred.lower
+  upper_bound <- impact$series$point.pred.upper
+
+  return(list(
+    impact = impact,
+    original = original_series,
+    lower_bound = lower_bound,
+    upper_bound = upper_bound
+  ))
 }
 
 # updated function to generate long data
@@ -382,7 +390,9 @@ generate_long_data <- function(dataframe,
       time = index(zoo_data),
       series = yvar,
       actual = zoo_data$response,
-      predicted = zoo_data$point.pred
+      predicted = zoo_data$point.pred,
+      lower = zoo_result$lower_bound,   # Add lower bound
+      upper = zoo_result$upper_bound    # Add upper bound
     )
   })
 
@@ -391,14 +401,13 @@ generate_long_data <- function(dataframe,
 
   # Convert to long format for ggplot2
   long_data <- pivot_longer(combined_data,
-                            cols = c("actual", "predicted"),
+                            cols = c("actual", "predicted", "lower", "upper"),
                             names_to = ".value",
                             values_drop_na = TRUE)
 
   return(long_data)
 }
 
-# Updated plotting function
 # Updated plotting function
 generate_plot <- function(df,
                           genders,
@@ -447,6 +456,8 @@ generate_plot <- function(df,
 
   # create visual
   ggplot(long_data2, aes(x = time, color = gender)) +
+    # Add translucent ribbon for error bounds
+    geom_ribbon(aes(ymin = lower, ymax = upper, fill = gender), alpha = 0.2, color = NA) +
     geom_line(aes(y = actual, linetype = "Actual")) +
     geom_line(aes(y = predicted, linetype = "Predicted")) +
     geom_vline(xintercept = intervention_date, linetype = "dashed", color = "#000000") +
@@ -456,6 +467,7 @@ generate_plot <- function(df,
       x = x_axis_label,
       y = y_axis_label,
       color = "Gender",
+      fill = "Gender",
       linetype = "Line Type"
     ) +
     scale_color_manual(values = line_colors) + # custom colors here
@@ -474,7 +486,7 @@ generate_plot <- function(df,
 }
 
 # test plot
-plot_fm_sep <- generate_plot(
+generate_plot(
   df = updated_df,
   yvars = c(
     "nicaragua_per_capita_anxiety_disorders",
@@ -490,33 +502,10 @@ plot_fm_sep <- generate_plot(
   measurename = "DALYs",
   metricname = "Number"
 )
-plot_fm_sep
 
-# aggregate_rows function that returns new rows
-aggregate_rows <- function(df, age_values) {
-  new_value <- paste0(sub("-.*", "", age_values[1]), "-", sub(".*-", "", age_values[length(age_values)]))
-  new_rows <- df %>%
-    group_by(measure, sex, year) %>%
-    group_modify(~ {
-      group_data <- .x
-      if (any(group_data$age %in% age_values)) {
-        new_row <- group_data[group_data$age == age_values[1], ]
-        new_row$age <- new_value
-        # identify columns containing "disorder", "population", "per_capita" to sum
-        sum_cols <- grep("disorder|population|per_capita", names(group_data), value = TRUE)
-        # sum identified columns for all age groups in age_values
-        for (col in sum_cols) {
-          new_row[[col]] <- sum(group_data[[col]][group_data$age %in% age_values], na.rm = TRUE)
-        }
-        return(new_row)
-      } else {
-        stop("Age groups not found in the dataset")
-      }
-    }) %>%
-    ungroup()
-  return(new_rows)
-}
 
+# generates plot for multiple ages
+# now with geon_ribbon error bars
 generate_plot2 <- function(df,
                            genders,
                            title,
@@ -590,6 +579,8 @@ generate_plot2 <- function(df,
   # Create the plot
   message("Creating the plot...")
   ggplot(long_data2, aes(x = time, color = age)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper, fill = gender, group = interaction(age, gender)),
+                alpha = 0.2, color = NA) + # Add 'group' to geom_ribbon
     geom_line(aes(y = actual, linetype = "Actual")) +
     geom_line(aes(y = predicted, linetype = "Predicted")) +
     geom_vline(xintercept = intervention_date,
@@ -631,17 +622,47 @@ generate_plot2(
   ),
   intervention_date = as.Date("2019-01-01"),
   line_colors = c(
-    "All ages" = "#000000"
+    "All ages" = "#000000",
+    "10-14" = "purple"
   ),
   plot_ages = list(
-    "All ages"
+    "All ages",
+    "10-14"
   ),
   measurename = "DALYs",
   metricname = "Number"
 )
 
 
+# aggregate_rows function that returns new rows
+aggregate_rows <- function(df, age_values) {
+  new_value <- paste0(sub("-.*", "", age_values[1]), "-", sub(".*-", "", age_values[length(age_values)]))
+  new_rows <- df %>%
+    group_by(measure, sex, year) %>%
+    group_modify(~ {
+      group_data <- .x
+      if (any(group_data$age %in% age_values)) {
+        new_row <- group_data[group_data$age == age_values[1], ]
+        new_row$age <- new_value
+        # identify columns containing "disorder", "population", "per_capita" to sum
+        sum_cols <- grep("disorder|population|per_capita", names(group_data), value = TRUE)
+        # sum identified columns for all age groups in age_values
+        for (col in sum_cols) {
+          new_row[[col]] <- sum(group_data[[col]][group_data$age %in% age_values], na.rm = TRUE)
+        }
+        return(new_row)
+      } else {
+        stop("Age groups not found in the dataset")
+      }
+    }) %>%
+    ungroup()
+  return(new_rows)
+}
+
 # generate_more_ages_plot function
+# works for multiple aggregate or non-aggregate age groups
+# works for multiple genders
+# FIXME
 generate_more_ages_plot <- function(df,
                                     genders,
                                     title = "No title",
