@@ -23,7 +23,8 @@ This repository contains the Excel datasets and supplementary materials used for
   - **Source**: [Institute for Health Metrics and Evaluation (IHME), Global Burden of Disease Study 2021](https://vizhub.healthdata.org/gbd-results/?params=gbd-api-2021-public/92a1f2b9ef7b3082a187ca3b0cb5e93b).
 
 - **mean_surface_air_temp_nic_hon.xlsx**: Average surface air temperature data for Nicaragua and Honduras.  
-  - **Source**: [[World Bank Climate Change Knowledge Portal: Honduras, World Bank Climate Change Knowledge Portal: Nicaragua](https://vizhub.healthdata.org/gbd-results/?params=gbd-api-2021-public/92a1f2b9ef7b3082a187ca3b0cb5e93b), (https://climateknowledgeportal.worldbank.org/country/nicaragua).
+  - **Source**: [World Bank Climate Change Knowledge Portal: Honduras](https://climateknowledgeportal.worldbank.org/country/honduras).
+  - **Source** [World Bank Climate Change Knowledge Portal: Nicaragua](https://climateknowledgeportal.worldbank.org/country/nicaragua).
 
 - **nicaragua_rain_cm.xlsx**: Data on annual rainfall in Nicaragua, measured in centimeters.  
   - **Source**: [World Bank Climate Change Knowledge Portal: Nicaragua](https://climateknowledgeportal.worldbank.org/country/nicaragua).
