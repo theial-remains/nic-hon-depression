@@ -2,7 +2,7 @@
 
 This repository contains the Excel datasets and supplementary materials used for the research paper titled "Depression and Anxiety in Nicaragua and Honduras." The data provided here includes various demographic and health metrics for comprehensive analysis.
 
-## Dataset Descriptions
+## Datasets
 
 - **age_strat_population.xlsx**: UN World Population Prospects data for males, females, and both genders, from 2005-2021.  
   - **Source**: [United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022](https://population.un.org/wpp/Download/Standard/Population/).
