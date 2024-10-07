@@ -579,11 +579,11 @@ generate_plot2 <- function(df,
   # Create the plot
   message("Creating the plot...")
   ggplot(long_data2, aes(x = time, color = age)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper, fill = gender, group = interaction(age, gender)),
+    ggplot2::geom_ribbon(aes(ymin = lower, ymax = upper, fill = gender, group = interaction(age, gender)),
                 alpha = 0.2, color = NA) + # Add 'group' to geom_ribbon
-    geom_line(aes(y = actual, linetype = "Actual")) +
-    geom_line(aes(y = predicted, linetype = "Predicted")) +
-    geom_vline(xintercept = intervention_date,
+    ggplot2::geom_line(aes(y = actual, linetype = "Actual")) +
+    ggplot2::geom_line(aes(y = predicted, linetype = "Predicted")) +
+    ggplot2::geom_vline(xintercept = intervention_date,
                linetype = "dashed",
                color = "#000000") +
     scale_x_date(date_breaks = "2 year", date_labels = "%Y") +
@@ -605,7 +605,7 @@ generate_plot2 <- function(df,
         "Predicted" = "Predicted Values"
       )
     ) +
-    theme_bw() +
+    ggplot2::theme_bw() +
     facet_grid(disease ~ country + gender)
 }
 
@@ -648,7 +648,7 @@ aggregate_rows <- function(df, age_values) {
         sum_cols <- grep("disorder|population|per_capita", names(group_data), value = TRUE)
         # sum identified columns for all age groups in age_values
         for (col in sum_cols) {
-          new_row[[col]] <- sum(group_data[[col]][group_data$age %in% age_values], na.rm = TRUE)
+          new_row[[col]] <- mean(group_data[[col]][group_data$age %in% age_values], na.rm = TRUE)
         }
         return(new_row)
       } else {
@@ -713,32 +713,40 @@ generate_more_ages_plot <- function(df,
   return(plot)
 }
 
+# FIXME make aggregate ages a mean and not a sum
+#
 # test
-test <- generate_more_ages_plot(
+generate_more_ages_plot(
   df = updated_df,
   genders = c("Female", "Male"),
-  title = "Test",
+  title = "Test3",
   yvars = c(
     "nicaragua_per_capita_anxiety_disorders",
     "honduras_per_capita_anxiety_disorders",
     "nicaragua_per_capita_major_depressive_disorder",
     "honduras_per_capita_major_depressive_disorder"
   ), # new columns
-  plot_ages = list(
-    c("10-14", "15-19", "20-24", "25-29"),
-    c("30-34", "35-39", "40-44", "45-49"),
-    c("50-54", "55-59", "60-64", "65-69"),
-    "All ages"
-  ),
+  plot_ages = list(c("10-14", "15-19"), "20-24", "25-29"),
   measurename = "DALYs",
   metricname = "Number",
   x_axis_label = "Time",
   y_axis_label = "DALYs",
   line_colors = c(
-    "All ages" = "#000000",
-    "10-29" = "red",
-    "30-49" = "#00c700",
-    "50-69" = "blue"
-  )
+    "10-19" = "red",
+    "15-19" = "#00c700",
+    "20-24" = "blue")
 )
-test
+
+
+library(tidyverse)
+updated_df %>%
+filter(measure == "DALYs", age %in% c("20-24", "25-29", "60-64"), sex == "Female") %>%
+select(year, honduras_per_capita_major_depressive_disorder, age) %>%
+ggplot( aes(x = year, y = honduras_per_capita_major_depressive_disorder, col = age))+
+ggplot2::geom_line()+theme_bw()
+
+names(updated_df)
+
+
+updated_df %>% filter(sex=="Female",year==2021, measure=="DALYs")%>%
+select(year, honduras_per_capita_major_depressive_disorder, age, hon_population, honduras_major_depressive_disorder)
