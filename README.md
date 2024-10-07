@@ -1,4 +1,4 @@
-# Depression and Anxiety in Nicaragua and Honduras
+# Mental Health Outcomes in Nicaragua and Honduras
 
 This repository contains the Excel datasets and supplementary materials used for the research paper titled "Depression and Anxiety in Nicaragua and Honduras." The data provided here includes various demographic and health metrics for comprehensive analysis.
 
