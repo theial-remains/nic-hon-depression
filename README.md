@@ -30,7 +30,7 @@ This repository contains the Excel datasets and supplementary materials used for
   - **Source**: [World Bank Climate Change Knowledge Portal: Nicaragua](https://climateknowledgeportal.worldbank.org/country/nicaragua).
 
 - **population_proportions.xlsx**: Proportional population data for various demographic groups.  
-  - **Source**: [United Nations World Population Prospects 2024](https://population.un.org/wpp/Download/Standard/Population/).
+- **Source**: [United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022](https://population.un.org/wpp/Download/Standard/Population/).
 
 - **stringency_new.xlsx**: Stringency index data for analyzing governmental responses to various health and social factors.  
   - **Source**: [Our World in Data: COVID-19: Stringency Index](https://ourworldindata.org/covid-stringency-index).
