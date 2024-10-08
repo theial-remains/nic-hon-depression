@@ -16,15 +16,15 @@ This repository contains the Excel datasets and supplementary materials used for
 - **honduras_annual_rain_cm.xlsx**: Data on annual rainfall in Honduras, measured in centimeters.  
   - **Source**: [World Bank Climate Change Knowledge Portal: Honduras](https://climateknowledgeportal.worldbank.org/country/honduras/climate-data-historical).
 
+- **nicaragua_rain_cm.xlsx**: Data on annual rainfall in Nicaragua, measured in centimeters.  
+  - **Source**: [World Bank Climate Change Knowledge Portal: Nicaragua](https://climateknowledgeportal.worldbank.org/country/nicaragua/climate-data-historical).
+
 - **ihme_dalys_2.xlsx**: Disability-Adjusted Life Years (DALYs) data from the Global Burden of Disease study, analyzed by disease and demographic variables.  
   - **Source**: [Institute for Health Metrics and Evaluation (IHME), Global Burden of Disease Study 2021](https://vizhub.healthdata.org/gbd-results/?params=gbd-api-2021-public/92a1f2b9ef7b3082a187ca3b0cb5e93b).
 
 - **mean_surface_air_temp_nic_hon.xlsx**: Average surface air temperature data for Nicaragua and Honduras.  
-  - **Source**: [World Bank Climate Change Knowledge Portal: Honduras](https://climateknowledgeportal.worldbank.org/country/honduras).
-  - **Source** [World Bank Climate Change Knowledge Portal: Nicaragua](https://climateknowledgeportal.worldbank.org/country/nicaragua).
-
-- **nicaragua_rain_cm.xlsx**: Data on annual rainfall in Nicaragua, measured in centimeters.  
-  - **Source**: [World Bank Climate Change Knowledge Portal: Nicaragua](https://climateknowledgeportal.worldbank.org/country/nicaragua).
+  - **Source**: [World Bank Climate Change Knowledge Portal: Honduras](https://climateknowledgeportal.worldbank.org/country/honduras/climate-data-historical).
+  - **Source** [World Bank Climate Change Knowledge Portal: Nicaragua](https://climateknowledgeportal.worldbank.org/country/nicaragua/climate-data-historical).
 
 - **population_proportions.xlsx**: Proportional population data for various demographic groups.  
 - **Source**: [United Nations, Department of Economic and Social Affairs, Population Division (2022). World Population Prospects 2022](https://population.un.org/wpp/Download/Standard/Population/).
