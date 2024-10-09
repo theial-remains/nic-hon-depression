@@ -43,7 +43,6 @@ library(stringr)
 # urls of the data files
 urls <- list(
   ihme_dalys = "https://github.com/Azidoe/nic-hon-depression/raw/main/ihme_dalys_2.xlsx",
-  ihme_ylds = "https://github.com/Azidoe/nic-hon-depression/raw/main/ihme_ylds_.xlsx",
   nicaragua_rain_cm = "https://github.com/Azidoe/nic-hon-depression/raw/main/nicaragua_rain_cm.xlsx",
   honduras_rain_cm = "https://github.com/Azidoe/nic-hon-depression/raw/main/honduras_annual_rain_cm.xlsx",
   mean_sat_nic_hon = "https://github.com/Azidoe/nic-hon-depression/raw/main/mean_surface_air_temp_nic_hon.xlsx",
@@ -62,7 +61,6 @@ read_excel_from_url <- function(url, ...) {
 
 # read data from urls
 ihme_dalys_2 <- read_excel_from_url(urls$ihme_dalys)
-ihme_ylds_2 <- read_excel_from_url(urls$ihme_ylds)
 stratified_population <- read_excel_from_url(urls$population)
 population_structure <- read_excel_from_url(urls$population_structure)
 nicaragua_rain_cm <- read_excel_from_url(urls$nicaragua_rain_cm)
@@ -75,12 +73,6 @@ stringency <- read_excel_from_url(urls$stringency)
 ihme_dalys <- ihme_dalys_2 %>%
   mutate(measure = ifelse(grepl("DALY", measure), "DALYs", measure)) %>%
   filter((measure == "DALYs" & metric == "Number") | (measure == "Prevalence" & metric == "Percent")) %>%
-  clean_names()
-
-# formatting for ihme_ylds
-ihme_ylds <- ihme_ylds_2 %>%
-  mutate(measure = ifelse(grepl("YLDs", measure), "YLDs", measure)) %>%
-  filter(measure == "YLDs") %>%
   clean_names()
 
 # formatting for population and adding age-standardized row
@@ -180,8 +172,8 @@ clean_age_groups <- function(age) {
 }
 
 # Formatting for depression/anxiety data with DALYs per capita
+# FIXME remove per capita after changing dataset
 adga2 <- ihme_dalys %>%
-  rbind(ihme_ylds) %>%
   select(-c("upper", "lower")) %>%
   mutate(age = clean_age_groups(age)) %>%
   filter(year >= 2005) %>%
@@ -662,7 +654,6 @@ aggregate_rows <- function(df, age_values) {
 # generate_more_ages_plot function
 # works for multiple aggregate or non-aggregate age groups
 # works for multiple genders
-# FIXME
 generate_more_ages_plot <- function(df,
                                     genders,
                                     title = "No title",
@@ -713,8 +704,6 @@ generate_more_ages_plot <- function(df,
   return(plot)
 }
 
-# FIXME make aggregate ages a mean and not a sum
-#
 # test
 generate_more_ages_plot(
   df = updated_df,
@@ -738,6 +727,8 @@ generate_more_ages_plot(
 )
 
 
+
+# tests
 library(tidyverse)
 updated_df %>%
 filter(measure == "DALYs", age %in% c("20-24", "25-29", "60-64"), sex == "Female") %>%
