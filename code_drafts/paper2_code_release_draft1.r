@@ -42,7 +42,8 @@ library(stringr)
 
 # urls of the data files
 urls <- list(
-  ihme_dalys = "https://github.com/Azidoe/nic-hon-depression/raw/main/ihme_dalys_2.xlsx",
+  ihme_dalys_dep = "https://github.com/theial-remains/nic-hon-depression/raw/main/ihme_dalys_depression.xlsx",
+  ihme_dalys_anx = "https://github.com/theial-remains/nic-hon-depression/raw/main/ihme_dalys_anxiety.xlsx",
   nicaragua_rain_cm = "https://github.com/Azidoe/nic-hon-depression/raw/main/nicaragua_rain_cm.xlsx",
   honduras_rain_cm = "https://github.com/Azidoe/nic-hon-depression/raw/main/honduras_annual_rain_cm.xlsx",
   mean_sat_nic_hon = "https://github.com/Azidoe/nic-hon-depression/raw/main/mean_surface_air_temp_nic_hon.xlsx",
@@ -60,7 +61,8 @@ read_excel_from_url <- function(url, ...) {
 }
 
 # read data from urls
-ihme_dalys_2 <- read_excel_from_url(urls$ihme_dalys)
+ihme_dalys_dep <- read_excel_from_url(urls$ihme_dalys_dep)
+ihme_dalys_anx <- read_excel_from_url(urls$ihme_dalys_anx)
 stratified_population <- read_excel_from_url(urls$population)
 population_structure <- read_excel_from_url(urls$population_structure)
 nicaragua_rain_cm <- read_excel_from_url(urls$nicaragua_rain_cm)
@@ -70,9 +72,10 @@ efotw_2023 <- read_excel_from_url(urls$efotw_2023, skip = 4)
 stringency <- read_excel_from_url(urls$stringency)
 
 # formatting for ihme_dalys
-ihme_dalys <- ihme_dalys_2 %>%
-  mutate(measure = ifelse(grepl("DALY", measure), "DALYs", measure)) %>%
-  filter((measure == "DALYs" & metric == "Number") | (measure == "Prevalence" & metric == "Percent")) %>%
+ihme_dalys <- rbind(ihme_dalys_dep, ihme_dalys_anx) %>%
+  mutate(measure = ifelse(grepl("DALY", measure), "DALYs", measure),
+         location = ifelse(grepl("Republic of Honduras", location), "Honduras", location),
+         location = ifelse(grepl("Republic of Nicaragua", location), "Nicaragua", location)) %>%
   clean_names()
 
 # formatting for population and adding age-standardized row
@@ -172,7 +175,6 @@ clean_age_groups <- function(age) {
 }
 
 # Formatting for depression/anxiety data with DALYs per capita
-# FIXME remove per capita after changing dataset
 adga2 <- ihme_dalys %>%
   select(-c("upper", "lower")) %>%
   mutate(age = clean_age_groups(age)) %>%
@@ -184,30 +186,18 @@ adga2 <- ihme_dalys %>%
       filter(year >= 2005),
     by = c("location", "year", "age", "sex")
   ) %>%
-  mutate(
-    val = as.numeric(val) * 100,
-    # Calculate DALYs per capita for each country
-    val_per_capita = case_when(
-      location == "Nicaragua" ~ val / population,
-      location == "Honduras" ~ val / population,
-      TRUE ~ NA_real_
-    ),
-    date = as.Date(paste0(year, "-01-01"))
-  ) %>%
-  pivot_wider(names_from = location, values_from = c(val, val_per_capita, population)) %>%
+  mutate(date = as.Date(paste0(year, "-01-01"))) %>%
+  pivot_wider(names_from = location,
+              values_from = c(val, population)) %>%
   rename(
     hon_population = population_Honduras,
     nic_population = population_Nicaragua,
-    honduras_per_capita = val_per_capita_Honduras,
-    nicaragua_per_capita = val_per_capita_Nicaragua,
     honduras = val_Honduras,
     nicaragua = val_Nicaragua
   ) %>%
   pivot_wider(names_from = cause,
               values_from = c(nicaragua,
-                              honduras,
-                              honduras_per_capita,
-                              nicaragua_per_capita)) %>%
+                              honduras)) %>%
   clean_names()
 
 # add variables
@@ -248,15 +238,6 @@ diff_df <- corrected_merged_df %>%
       as.numeric(hon_population[sex == "Male"]),
     nic_population = as.numeric(nic_population[sex == "Female"]) -
       as.numeric(nic_population[sex == "Male"]),
-    # diffs for per capita columns
-    nicaragua_per_capita_major_depressive_disorder = as.numeric(nicaragua_per_capita_major_depressive_disorder[sex == "Female"]) -
-      as.numeric(nicaragua_per_capita_major_depressive_disorder[sex == "Male"]),
-    honduras_per_capita_major_depressive_disorder = as.numeric(honduras_per_capita_major_depressive_disorder[sex == "Female"]) -
-      as.numeric(honduras_per_capita_major_depressive_disorder[sex == "Male"]),
-    nicaragua_per_capita_anxiety_disorders = as.numeric(nicaragua_per_capita_anxiety_disorders[sex == "Female"]) -
-      as.numeric(nicaragua_per_capita_anxiety_disorders[sex == "Male"]),
-    honduras_per_capita_anxiety_disorders = as.numeric(honduras_per_capita_anxiety_disorders[sex == "Female"]) -
-      as.numeric(honduras_per_capita_anxiety_disorders[sex == "Male"]),
     # set the sex column to "f-m_diff"
     sex = "f-m_diff"
   ) %>%
@@ -272,11 +253,7 @@ updated_df <- bind_rows(
       nicaragua_major_depressive_disorder = as.numeric(nicaragua_major_depressive_disorder),
       honduras_major_depressive_disorder = as.numeric(honduras_major_depressive_disorder),
       nicaragua_anxiety_disorders = as.numeric(nicaragua_anxiety_disorders),
-      honduras_anxiety_disorders = as.numeric(honduras_anxiety_disorders),
-      nicaragua_per_capita_major_depressive_disorder = as.numeric(nicaragua_per_capita_major_depressive_disorder),
-      honduras_per_capita_major_depressive_disorder = as.numeric(honduras_per_capita_major_depressive_disorder),
-      nicaragua_per_capita_anxiety_disorders = as.numeric(nicaragua_per_capita_anxiety_disorders),
-      honduras_per_capita_anxiety_disorders = as.numeric(honduras_per_capita_anxiety_disorders)
+      honduras_anxiety_disorders = as.numeric(honduras_anxiety_disorders)
     ),
   diff_df
 ) %>%
@@ -413,10 +390,10 @@ generate_plot <- function(df,
                             "f-m_diff" = "#000000"
                           ),
                           plot_ages = c("Age-standardized"),
-                          measurename = "Prevalence",
-                          metricname = "Percent",
+                          measurename = "DALYs",
+                          metricname = "Rate",
                           x_axis_label = "Time",
-                          y_axis_label = "Value") {
+                          y_axis_label = "DALYs per 100,000") {
   long_data2 <- lapply(genders, function(gender) {
     lapply(plot_ages, function(plot_age) {
       long_data <- generate_long_data(
@@ -481,8 +458,8 @@ generate_plot <- function(df,
 generate_plot(
   df = updated_df,
   yvars = c(
-    "nicaragua_per_capita_anxiety_disorders",
-    "honduras_per_capita_anxiety_disorders"
+    "nicaragua_anxiety_disorders",
+    "honduras_anxiety_disorders"
   ),
   genders = c("Female", "Male"),
   title = "test",
@@ -490,9 +467,7 @@ generate_plot(
     "Female" = "#FD4F6C",
     "Male" = "#0000FF"
   ),
-  plot_ages = c("All ages"),
-  measurename = "DALYs",
-  metricname = "Number"
+  plot_ages = c("All ages")
 )
 
 
@@ -505,8 +480,8 @@ generate_plot2 <- function(df,
                            intervention_date = as.Date("2019-01-01"),
                            line_colors,
                            plot_ages = c("Age-standardized"),
-                           measurename = "Prevalence",
-                           metricname = "Percent",
+                           measurename = "DALYs",
+                           metricname = "Rate",
                            x_axis_label = "Time",
                            y_axis_label = "Value") {
   long_data2 <- lapply(genders, function(gender) {
@@ -607,10 +582,10 @@ generate_plot2(
   genders = c("Female", "Male"),
   title = "test",
   yvars = c(
-    "nicaragua_per_capita_anxiety_disorders",
-    "honduras_per_capita_anxiety_disorders",
-    "nicaragua_per_capita_major_depressive_disorder",
-    "honduras_per_capita_major_depressive_disorder"
+    "nicaragua_anxiety_disorders",
+    "honduras_anxiety_disorders",
+    "nicaragua_major_depressive_disorder",
+    "honduras_major_depressive_disorder"
   ),
   intervention_date = as.Date("2019-01-01"),
   line_colors = c(
@@ -622,7 +597,7 @@ generate_plot2(
     "10-14"
   ),
   measurename = "DALYs",
-  metricname = "Number"
+  metricname = "Rate"
 )
 
 
@@ -666,10 +641,10 @@ generate_more_ages_plot <- function(df,
                                       "f-m_diff" = "#000000"
                                     ),
                                     plot_ages = c("Age-standardized"),
-                                    measurename = "Prevalence",
-                                    metricname = "Percent",
+                                    measurename = "DALYs",
+                                    metricname = "Rate",
                                     x_axis_label = "Time",
-                                    y_axis_label = "Value") {
+                                    y_axis_label = "DALYs per 100,000") {
   new_df <- NULL
   plot_ages2 <- c()
   for (age_group in plot_ages) {
@@ -710,14 +685,14 @@ generate_more_ages_plot(
   genders = c("Female", "Male"),
   title = "Test3",
   yvars = c(
-    "nicaragua_per_capita_anxiety_disorders",
-    "honduras_per_capita_anxiety_disorders",
-    "nicaragua_per_capita_major_depressive_disorder",
-    "honduras_per_capita_major_depressive_disorder"
+    "nicaragua_anxiety_disorders",
+    "honduras_anxiety_disorders",
+    "nicaragua_major_depressive_disorder",
+    "honduras_major_depressive_disorder"
   ), # new columns
   plot_ages = list(c("10-14", "15-19"), "20-24", "25-29"),
   measurename = "DALYs",
-  metricname = "Number",
+  metricname = "Rate",
   x_axis_label = "Time",
   y_axis_label = "DALYs",
   line_colors = c(
